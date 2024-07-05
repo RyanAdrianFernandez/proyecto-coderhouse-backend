@@ -107,10 +107,10 @@ app.post("/carts", async (req, res)=>{
 })
 
 //Obtener productos del cart seleccionado
-app.get("/cid", async (req, res)=>{
+app.get("/carts/cid", async (req, res)=>{
     const {cid} = req.params;
-    const productList = await productManager.getProductList()
-    res.status(201).json({resultado: productList})
+    const cartList = await cartManager.getProductById(cid)
+    res.status(201).json({resultado: cartList})
 
     res.status(203).json({respuesta: "Los productos son: "})
 })

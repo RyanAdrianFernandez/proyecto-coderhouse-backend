@@ -8,9 +8,9 @@ class CartManager{
     }
 
     async getProductById(id){
-        await this.getProductList()
+        await this.getCartList()
 
-        return this.productList.find(product => product.id == id)
+        return this.cartList.find(product => product.id == id)
     }
 
     async updateProduct(producto, updateProduct){
@@ -61,8 +61,8 @@ class CartManager{
 
     async getCartList(){
         const list = await fs.promises.readFile(this.path, "utf-8")
-        this.productList = [...JSON.parse(list).data]
-        return [...this.productList]
+        this.cartList = [...JSON.parse(list).data]
+        return [...this.cartList]
     }
 
     async addCart(products){
@@ -92,10 +92,6 @@ class CartManager{
     }
 
 }
-
-/*          
-                
-*/
 
 export default CartManager;
 

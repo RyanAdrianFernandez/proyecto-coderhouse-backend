@@ -1,4 +1,4 @@
-import fs from "node:fs"
+import fs from "node:fs";
 import { type } from "node:os";
 
 class CartManager{
@@ -7,62 +7,10 @@ class CartManager{
         this.cartList = [];
     }
 
-    async getProductById(id){
+    async getProductById(cid){
         await this.getCartList()
-
-        return this.cartList.find(product => product.id == id)
-    }
-
-    async updateProduct(producto, updateProduct){
-        // Hacer la logica para actualizar el producto
-        const modificacion = Object.keys(updateProduct)
-        const claveId = Object.keys(producto)
-
-        const verificarId = claveId.find(clave => clave == modificacion)
-        if(verificarId !== "id"){
-            const objetoActualizado = { ...producto, ...updateProduct };
-
-        await this.getProductList()
-
-        const index = this.productList.findIndex(p => p.id === producto.id);
-
-        if (index !== -1) {
-            // Actualizar el producto en this.productList
-            this.productList[index] = objetoActualizado;
-
-            // Escribir los datos actualizados de nuevo al archivo JSON
-            await fs.promises.writeFile(this.path, JSON.stringify({ data: this.productList }, null, 2));
-
-            return updateProduct;
-        }
-        await fs.promises.writeFile(this.path, JSON.stringify({data: this.productList}))
-        return objetoActualizado
-        } 
         
-        
-    }
-    
-    async deleteProduct(id){
-
-        const data = await fs.promises.readFile(this.path, "utf-8")
-        const jsonData = JSON.parse(data);
-        const idPasadoANumero = parseInt(id)
-
-        const findProducto = jsonData.data.findIndex( objeto => objeto.id === idPasadoANumero)
-        if(findProducto !== -1) {
-            jsonData.data.splice(findProducto, 1);
-            this.productList = jsonData.data;
-            await fs.promises.writeFile(this.path, JSON.stringify({data: this.productList}))
-            console.log("Eliminado con exito!")
-        } else{
-            console.log("No encontrado")
-        }
-    }
-
-    async getCartList(){
-        const list = await fs.promises.readFile(this.path, "utf-8")
-        this.cartList = [...JSON.parse(list).data]
-        return [...this.cartList]
+        return this.cartList.find(product => product.id == cid)
     }
 
     async addCart(products){
@@ -71,26 +19,57 @@ class CartManager{
 
         await this.getCartList()
 
-        const idAnterior = this.productList.length;
+        
+        const idAnterior = this.cartList.length;
         products.id = idAnterior + 1;
 
-        const listaDeCodes = []
+        const listaDeId = []
         
         for(let i=0; i<jsonData.data.length; i++){
-            listaDeCodes.push((jsonData.data[i].id))
+            listaDeId.push((jsonData.data[i].id))
         }
-        
-        const verificarCode = listaDeCodes.includes(products.id)
+        console.log(products.id)
+        const verificarCode = listaDeId.includes(products.id)
         if(verificarCode !== true){
             this.cartList.push(products)
             await fs.promises.writeFile(this.path, JSON.stringify({data: this.cartList}))
+            return true
         } else{
-            
             return verificarCode
         }
         
     }
 
+    async mostrarConsola(text){
+        return text 
+    }
+
+    async addProductOnCart(cid, product){
+        const data = await fs.promises.readFile(this.path, "utf-8")
+        const jsonData = JSON.parse(data);
+
+        await this.getCartList()
+
+        
+        const idAnterior = this.cartList.length;
+        products.id = idAnterior + 1;
+
+        const listaDeId = []
+        
+        for(let i=0; i<jsonData.data.length; i++){
+            listaDeId.push((jsonData.data[i].id))
+        }
+        console.log(products.id)
+        const verificarCode = listaDeId.includes(products.id)
+        if(verificarCode !== true){
+            this.cartList.products.push(products)
+            await fs.promises.writeFile(this.path, JSON.stringify({data: this.cartList}))
+            return true
+        } else{
+            return verificarCode
+        }
+        
+    }
 }
 
 export default CartManager;

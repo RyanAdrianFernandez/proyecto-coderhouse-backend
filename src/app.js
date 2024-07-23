@@ -2,30 +2,48 @@ import express, { query } from "express";
 import ProductManager from "./Class/productManager.js";
 import { __dirname } from "./utils.js";
 import CartManager from "./Class/cartManager.js";
-
+import { Server } from "socket.io";
+import handlebars from "express-handlebars"
+import homeRouter from "./routes/home.router.js"
+import realTimeRouter from "./routes/realtimeproducts.router.js";
 // POST => Guardar
 // GET => Obtener
 // PUT => Actualizar/Modificar
 // DELETE => Eliminar/Sacar
 
 const app = express();
+const httpServer = app.listen(8080, ()=>{
+    console.log("Servidor listo!")
+});
+const io = new Server(httpServer);
 
-app.use(express.json())
-app.use(express.urlencoded({extended: true}))
+
+//Config del engine views de Handlebars
+
+app.engine("handlebars", handlebars.engine())
+// Seteamos para poder usarlo
+app.set("views", __dirname + "/views");
+app.set("view engine", "handlebars" )
+app.use(express.static(__dirname + "/public"))
+app.use("/", homeRouter);
+app.use("/", realTimeRouter);
+app.use(express.static(__dirname + "/public"));
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+
 
 // PRODUCTOS
-const productManager = new ProductManager(__dirname + "/data/product.json");
+export const productManager = new ProductManager(__dirname + "/data/product.json");
 const cartManager = new CartManager(__dirname + "/data/cart.json")
-
 // Guardar
-app.post("/products", async (req, res)=>{
+app.post("/api/products/", async (req, res)=>{
     
     const agregarProducto = await productManager.addProduct(
         {
             id: 0,
             title: "zapatillas",
             description: "Gibson Les Paul",
-            code: "3552",
+            code: "wdas",
             price: 2500,
             status: true,
             stock: 100,
@@ -66,14 +84,17 @@ app.get("/api/products", async (req, res)=>{
 })
 
 // Obtener por Id
-app.get("/products/:pid", async (req, res)=>{
+app.get("/api/products/:pid", async (req, res)=>{
 
     const {pid} = req.params;
     const productFind = await productManager.getProductById(pid);
-    if(productFind){
+    if(productFind !== undefined){
         res.status(201).json({resultado: productFind})
+
+
+    }else{
+        res.status(404).json({resultado: "Not found"})
     }
-    res.status(404).json({resultado: "Not found"})
     
 })
 
@@ -88,17 +109,16 @@ app.delete("/:pid", async (req, res)=>{
 // Cart
 // Guardar
 
-app.post("/carts", async (req, res)=>{
+app.post("/api/carts/", async (req, res)=>{
     const agregarCart = await cartManager.addCart(
         {
             id: 0,
             products: [
-                {"id": 1, "products": [{"id": "id arroz", "quantity": 1 }]}
+                [{"id": "Zapatos", "quantity": 4 }]
             ]
         }
     )
     if(agregarCart === true){
-        console.log(agregarCart);
         res.status(201).json({
             respuesta: "Agregado al cart!"
         })
@@ -106,22 +126,53 @@ app.post("/carts", async (req, res)=>{
 
 })
 
-//Obtener productos del cart seleccionado
-app.get("/carts/cid", async (req, res)=>{
+//Obtener productos del cart con id 
+app.get("/carts/:cid", async (req, res)=>{
     const {cid} = req.params;
     const cartList = await cartManager.getProductById(cid)
-    res.status(201).json({resultado: cartList})
 
-    res.status(203).json({respuesta: "Los productos son: "})
+    if(cartList !== undefined){
+        res.status(201).json({cartList})
+    } else{
+        res.status(404).json({resultado: "Not found"})
+    }
+    
 })
 
 //Guardar: agregar el producto al arreglo “products” del carrito seleccionado
 app.post("/:cid/product/:pid", async (res, req)=>{
     const {cid, pid} = req.params
 
-    // mi metodo await cartManager.addProductOnCart(cid, pid)
+    const addProductOnCart = await cartManager.addProductOnCart(
+        cid, 
+        {
+            id: 0,
+            products: [
+                [{"id": "Zapatos", "quantity": 4 }]
+            ]
+        }
+    )
+    
 })
 
-app.listen(8080, ()=>{
-    console.log("Servidor listo!")
-}) 
+// SOCKET
+
+io.on("connection", async (socket) =>{
+    console.log("Nueva conexion!")
+    const productList = await productManager.getProductList()
+    socket.emit("home", productList);
+    socket.emit("realtime", productList);
+    socket.on("nuevoProducto", async producto =>{
+        await productManager.addProduct(producto)
+        io.emit("realtime", productList)
+    })
+    socket.on("eliminarProducto", async id =>{
+                productManager.deleteProduct(id)
+                io.emit("realtime", productList)
+            
+         
+    })
+    
+})
+
+

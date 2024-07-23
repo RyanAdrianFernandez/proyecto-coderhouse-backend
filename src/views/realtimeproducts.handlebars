@@ -1,0 +1,32 @@
+<h1>Desde el servidor</h1>
+
+<div class="events">
+    <div class="add inputs">
+        <h3>Agregar productos</h3>
+        <div class="form-add">
+            <input type="text" id="add-title" placeholder="Titulo">
+            <input type="text" id="add-description" placeholder="Descripcion">
+            <input type="text" id="add-price" placeholder="Precio">
+            <input type="text" id="add-code" placeholder="Codigo">
+            <input type="text" id="add-stock" placeholder="Stock">
+            <input type="text" id="add-category" placeholder="Categoria">
+            <button onclick="addProduct()">Agregar nuevo producto</button>
+        </div>
+    </div>
+    <div class="eliminar inputs">
+        <h3>Eliminar Producto</h3>
+        <div class="form-add">
+            <input id="idAEliminar" type="text" placeholder="Id producto a eliminar">
+            <button onclick="deleteProduct()">Eliminar Producto</button>
+        </div>
+    </div>
+</div>
+<div>
+    <h2>Productos en tiempo real</h2>
+    <div id="productosRealTime">
+        
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/realtime.js"></script>

@@ -1,0 +1,18 @@
+*{
+    font-family: sans-serif;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+.producto{
+    border: solid 1px black;
+}
+.events{
+    margin-bottom: 2em;
+}
+.inputs{
+    margin: 1em 5px;
+}
+#productosRealTime{
+    margin: 2px 5px;
+}

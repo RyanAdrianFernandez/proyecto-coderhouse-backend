@@ -5,7 +5,7 @@ import CartManager from "./Class/cartManager.js";
 import { Server } from "socket.io";
 import handlebars from "express-handlebars"
 import homeRouter from "./routes/home.router.js"
-import realTimeRouter from "./routes/realtimeproducts.router.js";
+import realTimeRouter from "./views router/realtimeproducts.router.js";
 // POST => Guardar
 // GET => Obtener
 // PUT => Actualizar/Modificar
@@ -64,15 +64,12 @@ app.post("/api/products/", async (req, res)=>{
 app.put("/:pid", async (req, res)=>{
     const {pid} = req.params;
     const updateFile = req.body;
-    
-    
-
     const productFind = await productManager.getProductById(pid);
     const updateProduct = await productManager.updateProduct(productFind, updateFile)
 
     if(updateProduct){    res.status(203).json({updateFile: "Se actualizo correctamente!"})
     }
-    res.json({updateFile: "Capo no podes cambiar el ID"})
+    res.json({updateFile: "No podes cambiar el ID"})
 })
 
 // Obtener

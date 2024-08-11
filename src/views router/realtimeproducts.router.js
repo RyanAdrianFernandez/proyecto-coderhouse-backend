@@ -5,7 +5,8 @@ const realTimeRouter = express.Router()
 
 realTimeRouter.get("/realtimeproducts", async (req,res)=>{
     const lista = await productManager.getProductList();
-    res.render("realtimeproducts", {lista})
+    res.render("realtimeproducts", {lista}) 
 })
+
 
 export default realTimeRouter;

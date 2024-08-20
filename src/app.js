@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import productsRouter from "./routes/products.router.js";
 import cartRouter from "./routes/cart.router.js";
 import userCarts from "./models/userCarts.model.js";
+import productsRenderRouter from "./views router/productsRender.router.js";
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/", homeRouter);
 app.use("/", realTimeRouter);
 app.use("/", productsRouter)
 app.use("/", cartRouter)
+app.use("/", productsRenderRouter)
 
 // PRODUCTOS
 export const productManager = new ProductManager(__dirname + "/data/product.json");

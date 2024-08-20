@@ -1,9 +1,19 @@
 <div id="listaProducts">
     <h3>Productos</h3>
     <ul>
-        {{#each productos}}
-            <li>{{productos.title}}</li>        
-        {{/each}}
+           {{#if productos}}
+        <ul>
+            <li><p>Hay productos</p></li>
+            {{#each productos}}
+                <li>
+                    <h2>{{this.title}}</h2> <!-- Renderiza el campo 'title' -->
+                    <p>Price: ${{this.price}}</p> <!-- Renderiza el campo 'price' -->
+                </li>
+            {{/each}}
+        </ul>
+    {{else}}
+        <p>No products available.</p>
+    {{/if}}
     </ul>
     
 </div>

@@ -174,7 +174,7 @@ productsRouter.get("/api/products", async (req, res) => {
         opciones.sort = { price: direccion };
     }
 
-      let productos = await productsModels.paginate(filtro, opciones)
+    let productos = await productsModels.paginate(filtro, opciones)
       res.status(200).json({status: "Success", payload: productos})
     }
     catch{err=>res.status(500).send(err)}

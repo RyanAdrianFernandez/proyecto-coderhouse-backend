@@ -71,19 +71,31 @@ cartRouter.post("/user", async (req, res)=>{
 // Crear cart en bbdd
 cartRouter.post("/cart", async (req, res)=>{
     const result = await cart.create({
-
     })
     res.send({status: "Cart creado", payload: result})
 })
 
 // Agregar producto al array de cart
-cartRouter.post("/api/carts/:cid/products/:pid", async (req, res)=>{
-    const {cid, pid} = req.params
-    const carrito = await cart.findById({_id: cid});
-    carrito.products.push({productos: pid});
-    await cart.updateOne({_id: cid}, carrito)
-    res.send({status: "Producto Agregado", payload: carrito});
-})
+cartRouter.post('/prueba/:cid/product/:pid', async (req, res) => {
+    const { cid, pid } = req.params;
+
+    const cartFinded = await cart.findById(cid);
+    if(!cartFinded) res.status(404).json({ message: 'error' });
+
+    const indexProd = cartFinded.products.findIndex(prod => prod.productos.toString() === pid);
+    if(indexProd === -1){
+        cartFinded.products.push({ productos: pid, quantity: 1 })
+    } else {
+        cartFinded.products[indexProd] = { productos: cartFinded.products[indexProd].productos, quantity: cartFinded.products[indexProd].quantity + 1 }
+    }
+    const cartUpdated = await cart.findByIdAndUpdate(cid,cartFinded, {
+        new: true,
+    }).populate('products.productos')
+
+    res.status(201).json({ message: 'Product Added', cart: cartUpdated})
+
+});
+
 
 // Ver productos del cart con populate
 cartRouter.get("/api/carts/:cid", async (req, res)=>{
@@ -96,38 +108,79 @@ cartRouter.get("/api/carts/:cid", async (req, res)=>{
 cartRouter.delete('/api/carts/:cid/products/:pid', async (req, res) => {
     const { cid, pid } = req.params;
 
-    try {
-        const obtenerCart = await cart.find({_id: cid})
+    const cartFinded = await cart.findById(cid).lean();
+    if(!cartFinded) res.status(404).json({ message: 'error' });
 
-        for(let i = 0; i<obtenerCart.length; i++) {
-            if(obtenerCart[i].products[0].productos === pid) {
-                console.log("Encontrado")
-            } else {
-                console.log("No encontrado")
-            }
-        }
-
-        if (!updatedCart) {
-            return res.status(404).json({ message: 'Cart or product not found' });
-        }
-
-        res.status(200).json(updatedCart);
-    } catch (error) {
-        res.status(500).json({ error: 'Error removing product from cart', details: error.message });
+    const cartFiltered = {
+        ...cartFinded,
+        products:  cartFinded.products.filter(prod => prod.productos.toString() !== pid)
     }
+
+    const cartUpdated = await cart.findByIdAndUpdate(cid,cartFiltered, {
+        new: true,
+    }).populate('products.productos')
+
+    res.status(201).json({ message: 'Product deleted', cart: cartUpdated})
 });
+
 // Crear Put api/carts/:cid actualizar el cart con un array de productos
-cartRouter.put("/api/carts/:cid", async (req, res)=>{
-    const {cid} = req.params;
-    const dataUpdate = req.body;
-    const result = await cart.find({_id: cid}).populate("products.productos");
-    const actualizacion = await cart.findByIdAndUpdate(cid, dataUpdate, {new: true});
-    res.send({status: "Producto Actualizado", payload: result})
-})
+cartRouter.put('/api/carts/:cid', async (req, res) => {
+    const { cid } = req.params;
+    const { products } = req.body
+
+    const cartFinded = await cart.findById(cid).lean();
+    if(!cartFinded) res.status(404).json({ message: 'error' });
+
+    const newCart = {
+        ...cartFinded,
+        products
+    }
+    const cartUpdated = await cart.findByIdAndUpdate(cid,newCart, {
+        new: true,
+    }).populate('products.productos')
+
+    res.status(201).json({ message: 'Products clean', cart: cartUpdated})
+
+});
+
 // Crear Put api/carts/:cid/products/:pid actualizar el quantity que deseamos
+cartRouter.put('/api/carts/:cid/products/:pid', async (req, res) => {
+    const { cid, pid } = req.params;
+    const { quantity } = req.body;
+
+    const cartFinded = await cart.findById(cid).lean();
+    if(!cartFinded) res.status(404).json({ message: 'error' });
+
+    const indexProd = cartFinded.products.findIndex(prod => prod.productos.toString() === pid);
+    
+    cartFinded.products[indexProd] = { ...cartFinded.products[indexProd], quantity }
+    
+    const cartUpdated = await cart.findByIdAndUpdate(cid,cartFinded, {
+        new: true,
+    }).populate('products.productos')
+
+    res.status(201).json({ message: 'Product Quantity Modify', cart: cartUpdated })
+
+});
 
 // Delete eliminar todos los productos del carrito
+cartRouter.delete('/api/carts/:cid', async (req, res) => {
+    const { cid } = req.params;
 
+    const cartFinded = await cart.findById(cid).lean();
+    if(!cartFinded) res.status(404).json({ message: 'error' });
+
+    const newCart = {
+        ...cartFinded,
+        products: []
+    }
+    const cartUpdated = await cart.findByIdAndUpdate(cid,newCart, {
+        new: true,
+    })
+
+    res.status(201).json({ message: 'Products clean', cart: cartUpdated})
+
+});
 // Hacer populate de el cart con los productos, para ver el id y al desglosar ver los productos
 
 // Modificar el index.handlebars para ver en /products los productos con su respectiva paginacion

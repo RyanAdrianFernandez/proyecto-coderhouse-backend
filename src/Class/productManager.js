@@ -1,6 +1,4 @@
-import { json } from "express";
 import fs from "node:fs"
-import { type } from "node:os";
 
 class ProductManager{
     constructor(path){

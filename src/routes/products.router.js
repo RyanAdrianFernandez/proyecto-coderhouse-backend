@@ -43,14 +43,6 @@ productsRouter.put("/:pid", async (req, res)=>{
     res.json({updateFile: "No podes cambiar el ID"})
 })
 
-// Obtener
-/*productsRouter.get("/api/products", async (req, res)=>{
-    const productList = await productManager.getProductList()
-    res.status(201).json({resultado: productList})
-
-    res.status(203).json({respuesta: "Actualizado"})
-})*/
-
 // Obtener por Id
 productsRouter.get("/api/products/:pid", async (req, res)=>{
 

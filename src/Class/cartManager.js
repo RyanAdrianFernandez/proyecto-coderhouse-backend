@@ -1,10 +1,15 @@
 import fs from "node:fs";
-import { type } from "node:os";
 
 class CartManager{
     constructor(path){
         this.path = path;
         this.cartList = [];
+    }
+
+    async getCartList(){
+        const list = await fs.promises.readFile(this.path, "utf-8")
+        this.cartList = [...JSON.parse(list).data]
+        return [...this.cartList]
     }
 
     async getProductById(cid){
@@ -16,9 +21,7 @@ class CartManager{
     async addCart(products){
         const data = await fs.promises.readFile(this.path, "utf-8")
         const jsonData = JSON.parse(data);
-
         await this.getCartList()
-
         
         const idAnterior = this.cartList.length;
         products.id = idAnterior + 1;
@@ -38,6 +41,22 @@ class CartManager{
             return verificarCode
         }
         
+    }
+    async deleteCart(id){
+
+        const data = await fs.promises.readFile(this.path, "utf-8")
+        const jsonData = JSON.parse(data);
+        const idPasadoANumero = parseInt(id)
+
+        const findProducto = jsonData.data.products.findIndex( objeto => objeto.id === idPasadoANumero)
+        if(findProducto !== -1) {
+            jsonData.data.splice(findProducto, 1);
+            this.cartList = jsonData.data;
+            await fs.promises.writeFile(this.path, JSON.stringify({data: this.cartList}))
+            console.log("Eliminado con exito!")
+        } else{
+            console.log("No encontrado")
+        }
     }
 
     async mostrarConsola(text){

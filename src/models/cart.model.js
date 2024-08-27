@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 const cartCollection = "carritos"
-
+import mongoosePaginate from "mongoose-paginate-v2"
 const cartSchema = new mongoose.Schema({
     products: { 
         type: [
@@ -19,5 +19,6 @@ const cartSchema = new mongoose.Schema({
     }
 })
 
+cartSchema.plugin(mongoosePaginate)
 const cart = mongoose.model(cartCollection, cartSchema)
 export default cart;

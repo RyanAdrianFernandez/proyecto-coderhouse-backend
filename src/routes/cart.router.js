@@ -3,16 +3,18 @@ import express from "express"
 const cartRouter = express.Router()
 import userCarts from "../models/userCarts.model.js"
 import cart from "../models/cart.model.js"
+import CartManager from "../Class/cartManager.js"
+import { __dirname } from "../utils.js"
 
-// Cart
-// Guardar
-
+const cartManager = new CartManager(__dirname + "/data/cart.json")
+// ==================================================== De forma LOCAL =========================================================
+// Agregar al Cart
 cartRouter.post("/api/carts/", async (req, res)=>{
     const agregarCart = await cartManager.addCart(
         {
             id: 0,
             products: [
-                [{"id": "Zapatos", "quantity": 4 }]
+                [{"id": "Guitarras", "quantity": 40 }]
             ]
         }
     )
@@ -25,7 +27,7 @@ cartRouter.post("/api/carts/", async (req, res)=>{
 })
 
 //Obtener productos del cart con id 
-cartRouter.get("/carts/:cid", async (req, res)=>{
+cartRouter.get("/api/cartsLocal/:cid", async (req, res)=>{
     const {cid} = req.params;
     const cartList = await cartManager.getProductById(cid)
 
@@ -38,20 +40,39 @@ cartRouter.get("/carts/:cid", async (req, res)=>{
 })
 
 //Guardar: agregar el producto al arreglo “products” del carrito seleccionado
-cartRouter.post("/:cid/product/:pid", async (res, req)=>{
-    const {cid, pid} = req.params
+cartRouter.post("/product/:cid", async (req, res)=>{
+    const {cid} = req.params;
 
     const addProductOnCart = await cartManager.addProductOnCart(
         cid, 
         {
             id: 0,
             products: [
-                [{"id": "Zapatos", "quantity": 4 }]
+                [{"id": 2, "quantity": 4, "title": "Guitarras", "price": 2500 }]
             ]
         }
     )
+    res.send({message: "Producto Agregado", payload: addProductOnCart})
     
 })
+cartRouter.delete("/carts/:cid", async (req, res)=>{
+    const {cid} = req.params;
+    const deleteCart = await cartManager.deleteCart(cid)
+    if(deleteCart){
+        res.status(202).send({message: "Eliminado del carrito", payload: deleteCart})
+    } else {
+        res.status(400).send({message: "Not Found"})
+    }
+})
+
+cartRouter.put("/api/carts/:cid", async (req, res)=>{
+    const {cid} = req.params;
+    const dataUpdate = req.body;
+    const result = await cartManager.updateCart(cid, dataUpdate)
+    res.send({status: "Producto Actualizado", payload: result})
+})
+//======================================================================================
+
 
 // En Mongo Atlas
 // Crear usuario
@@ -76,7 +97,7 @@ cartRouter.post("/cart", async (req, res)=>{
 })
 
 // Agregar producto al array de cart
-cartRouter.post('/prueba/:cid/product/:pid', async (req, res) => {
+cartRouter.post('/api/carts/:cid/products/:pid', async (req, res) => {
     const { cid, pid } = req.params;
 
     const cartFinded = await cart.findById(cid);
@@ -98,7 +119,7 @@ cartRouter.post('/prueba/:cid/product/:pid', async (req, res) => {
 
 
 // Ver productos del cart con populate
-cartRouter.get("/api/carts/:cid", async (req, res)=>{
+cartRouter.get("/api/cartsPopulate/:cid", async (req, res)=>{
     const {cid} = req.params;
     const carritoNuevo = await cart.find({_id: cid}).populate("products.productos");
     res.send({status: "Producto Agregado", payload: carritoNuevo});
@@ -181,38 +202,24 @@ cartRouter.delete('/api/carts/:cid', async (req, res) => {
     res.status(201).json({ message: 'Products clean', cart: cartUpdated})
 
 });
-// Hacer populate de el cart con los productos, para ver el id y al desglosar ver los productos
-
-// Modificar el index.handlebars para ver en /products los productos con su respectiva paginacion
-// 2 opciones:
-//  - Hacer que cuando le de click al producto me lleve a una nueva pagina con el detalle y un boton para 
-//    agregar al cart
-//  - Poner un boton directamente en cada producto para agregar al cart
-
-// Agregar una vista en /carts/:cid(idDelCart) para visualizar el cart con sus productos agregados
 
 // Obtener del carrito
 cartRouter.get("/api/carts/:cid", async (req, res)=>{
     const {cid} = req.params;
-    const result = await cartModel.findById(cid)
+    const result = await cart.find({_id: cid})
     res.send({status: "Producto obtenido", payload: result})
 })
 
 // Acutalizar carrito
-cartRouter.put("/api/carts/:cid", async (req, res)=>{
-    const {cid} = req.params;
-    const dataUpdate = req.body;
-    const result = await cartModel.findByIdAndUpdate(cid, dataUpdate, {new: true});
-    res.send({status: "Producto Actualizado", payload: result})
-})
+
 
 // Eliminar del carrito por id
 
 
 // Agregar Delete para eliminar todos los productos del carrito
-cartRouter.delete("/carts/:pid", async (req, res)=>{
+cartRouter.delete("/api/carts/:pid", async (req, res)=>{
     const {pid} = req.params;
-    const result = await cartModel.delete();
+    const result = await cart.findByIdAndDelete({_id: pid});
     res.send({status: "Producto Eliminado", payload: result})
 })
 
@@ -249,6 +256,47 @@ cartRouter.get("/agregation/cart", async (req, res)=>{
     res.send({status: "Cart filtrado", payload: order})
 
 
+})
+
+cartRouter.get("/api/cartsPaginate", async (req, res) => {
+    try{
+      const limit = parseInt(req.query.limit, 10) || 10;
+      const page = parseInt(req.query.page, 10) || 1;
+      let category = req.query.category // Filtrar por categoría
+      let status = req.query.status // Filtrar por disponibilidad, true/false
+      let orden = req.query.orden // Ordenar el precio asc/desc, sort
+      let filtro = {}
+      // Filtrar por elemento si existe el query
+      
+        if (category) {
+            filtro.category = category;
+      }
+
+      // Filtrar por status si se proporciona
+      if(status){
+        if(status !== "false" && status !== "true") {
+            res.send("No se encontro el producto")
+        }else if (status=== "true") {
+            filtro.status = true;
+        }else if(status === "false") {
+        filtro.status = false;
+      } 
+    }
+      
+      const opciones = {
+        page,
+        limit
+      }
+      if (orden === 'asc' || orden === 'desc') {
+        // Convertir 'asc'/'desc' a 1/-1 para el ordenamiento
+        const direccion = orden === 'asc' ? 1 : -1;
+        opciones.sort = { price: direccion };
+    }
+
+    let productos = await cart.paginate(filtro, opciones)
+      res.status(200).json({status: "Success", payload: productos})
+    }
+    catch{err=>res.status(500).send(err)}
 })
 
 export default cartRouter

@@ -7,4 +7,5 @@ homeRouter.get("/home", async (req,res)=>{
     res.render("home", {lista})
 })
 
+
 export default homeRouter;
